@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>暖守 v3 · 独居女生守护伴侣</title>
+<style>
+:root {
+  --pink:#FF7B89; --pink-light:#FFD6DC; --pink-pale:#FFF0F2; --pink-soft:#FFF5F5;
+  --rose:#E8536A; --text-dark:#2D2030; --text-mid:#6B5B6E; --text-light:#B0A0B3;
+  --white:#FFFFFF; --bg:#FFF5F0; --card:#FFFFFF; --border:#F5E0E5;
+  --green:#52C77F; --green-bg:#EDFAF4; --orange:#FF9555; --orange-bg:#FFF3EB;
+  --red:#FF4B4B; --red-bg:#FFF0F0; --blue:#5B8FFF; --blue-bg:#EEF3FF;
+  --purple:#9B6EBE; --shadow:0 2px 16px rgba(255,123,137,0.12);
+  --shadow-card:0 2px 12px rgba(45,32,48,0.07);
+  --radius:20px; --radius-sm:14px; --radius-xs:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;
+  background:#F0E5EE; display:flex; justify-content:center; align-items:center;
+  min-height:100vh; overflow:auto; padding:20px 0;
+}
+.phone-frame{
+  width:390px; height:844px; background:var(--bg);
+  border-radius:50px; overflow:hidden; position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,0.25),0 0 0 2px rgba(255,255,255,0.15);
+}
+.screen{width:100%;height:100%;position:relative;}
+
+/* Pages */
+.page{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;}
+.page.active{display:flex;}
+.page-content{flex:1;overflow-y:auto;padding:0 0 90px;}
+.page-content::-webkit-scrollbar{display:none;}
+
+/* Header gradient blocks */
+.grad-header{padding:18px 24px 20px;color:white;flex-shrink:0;}
+.grad-header.pink{background:linear-gradient(160deg,#FF7B89,#FF9BAA);}
+.grad-header.purple{background:linear-gradient(160deg,#9B6EBE,#B88FD4);}
+.grad-header.exec-grad{background:linear-gradient(160deg,#FF5068,#FF7B89);}
+.grad-header h1{font-size:22px;font-weight:700;}
+.grad-header p{font-size:13px;opacity:0.85;margin-top:4px;}
+
+/* Status bar */
+.status-bar{padding:12px 24px 4px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-light);flex-shrink:0;}
+
+/* Bottom nav */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(255,245,245,0.95); backdrop-filter:blur(12px);
+  border-top:1px solid var(--border); padding:8px 0 26px;
+  display:flex;justify-content:space-around;align-items:center;z-index:100;
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 16px;border-radius:12px;color:var(--text-light);font-size:11px;font-weight:500;transition:all 0.2s;}
+.nav-item.active{color:var(--pink);}
+.nav-item .nav-icon{font-size:22px;position:relative;}
+.nav-item .notif-dot{position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--bg);}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-card);margin:0 20px 16px;overflow:hidden;}
+.card-inner{padding:16px 18px;}
+.section-title{font-size:13px;font-weight:600;color:var(--text-mid);padding:8px 24px 10px;letter-spacing:0.3px;}
+.section-row{display:flex;justify-content:space-between;align-items:center;padding:0 20px;}
+
+/* ========== HOME ========== */
+.period-badge{background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:500;backdrop-filter:blur(4px);display:inline-block;}
+.risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px;}
+.risk-dot.high{background:#FFD600;}
+.risk-dot.ok{background:#52C77F;}
+.period-row{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:12px;opacity:0.8;}
+
+/* SOS button */
+.sos-section{display:flex;flex-direction:column;align-items:center;padding:24px 20px 12px;}
+.sos-ring-wrap{position:relative;width:170px;height:170px;cursor:pointer;}
+.sos-ring-bg{position:absolute;top:0;left:0;width:170px;height:170px;border-radius:50%;background:rgba(255,123,137,0.08);animation:pulse 2.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:0.6}50%{transform:scale(1.1);opacity:0.3}}
+.sos-btn{position:absolute;top:15px;left:15px;width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#FF7B89,#FF5068);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;cursor:pointer;user-select:none;box-shadow:0 8px 28px rgba(255,80,104,0.45);transition:transform 0.15s;}
+.sos-btn:active{transform:scale(0.96);}
+.sos-btn-icon{font-size:32px;margin-bottom:4px;}
+.sos-btn-text{font-size:15px;font-weight:700;}
+.sos-btn-sub{font-size:11px;opacity:0.8;margin-top:2px;}
+.sos-progress{position:absolute;top:0;left:0;width:170px;height:170px;transform:rotate(-90deg);pointer-events:none;opacity:0;transition:opacity 0.2s;}
+.sos-progress.counting{opacity:1;}
+.sos-progress circle{fill:none;stroke:var(--pink);stroke-width:4;stroke-dasharray:502;stroke-dashoffset:502;stroke-linecap:round;transition:stroke-dashoffset 0.1s linear;}
+.sos-hint{margin-top:10px;font-size:12px;color:var(--text-light);text-align:center;}
+
+/* Emoji bar */
+.emoji-bar{display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none;margin-bottom:4px;}
+.emoji-bar::-webkit-scrollbar{display:none;}
+.emoji-btn{flex-shrink:0;width:50px;height:50px;border-radius:16px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:var(--shadow-card);font-size:20px;transition:all 0.2s;border:2px solid transparent;}
+.emoji-btn.selected{border-color:var(--pink);background:var(--pink-pale);transform:scale(1.08);}
+.emoji-btn span{font-size:9px;color:var(--text-light);font-weight:500;}
+.emoji-label{font-size:12px;color:var(--text-light);padding:0 20px 14px;}
+
+/* Contacts strip */
+.contacts-strip{display:flex;gap:10px;padding:0 20px 4px;overflow-x:auto;scrollbar-width:none;}
+.contacts-strip::-webkit-scrollbar{display:none;}
+.contact-chip{flex-shrink:0;background:var(--card);border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-card);cursor:pointer;border:1.5px solid transparent;transition:all 0.2s;min-width:140px;}
+.contact-chip.active-period{border-color:var(--pink-light);}
+.contact-avatar{width:38px;height:38px;border-radius:50%;background:var(--pink-light);display:flex;align-items:center;justify-content:center;font-size:17px;position:relative;flex-shrink:0;}
+.status-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;border:2px solid white;}
+.status-dot.green{background:var(--green);}
+.status-dot.yellow{background:var(--orange);}
+.contact-info{min-width:0;}
+.contact-name{font-size:13px;font-weight:600;color:var(--text-dark);}
+.contact-state{font-size:11px;color:var(--text-light);margin-top:1px;}
+.add-contact-chip{flex-shrink:0;background:var(--pink-pale);border-radius:16px;padding:10px 16px;display:flex;align-items:center;gap:8px;cursor:pointer;border:1.5px dashed var(--pink-light);color:var(--pink);font-size:13px;font-weight:500;min-width:120px;justify-content:center;}
+
+/* Health Dashboard */
+.health-dash-card{background:linear-gradient(135deg,#FFF9F0,#FFF5F9);margin:0 20px;border-radius:var(--radius);padding:16px 18px;border:1.5px solid var(--border);box-shadow:var(--shadow-card);}
+.health-dash-title{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:12px;}
+.health-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.health-item:last-child{border-bottom:none;}
+.health-icon{font-size:22px;width:36px;text-align:center;}
+.health-info{flex:1;}
+.health-name{font-size:13px;font-weight:600;color:var(--text-dark);}
+.health-meta{font-size:11px;color:var(--text-mid);margin-top:2px;}
+.health-status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
+.health-status.good{background:var(--green-bg);color:var(--green);}
+.health-status.warn{background:var(--orange-bg);color:var(--orange);}
+.health-status.bad{background:var(--red-bg);color:var(--red);}
+.health-action-btn{display:block;width:100%;margin-top:12px;padding:11px;border-radius:var(--radius-xs);border:none;cursor:pointer;font-size:13px;font-weight:600;color:white;background:linear-gradient(135deg,#FF7B89,#FF5068);box-shadow:0 4px 12px rgba(255,80,104,0.25);transition:all 0.2s;}
+
+/* Alive card */
+.alive-card{background:var(--blue-bg);margin:16px 20px;border-radius:var(--radius);padding:14px 18px;border:1.5px solid #C5D9FF;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-card);}
+.alive-card .icon{font-size:28px;}
+.alive-card .info{flex:1;}
+.alive-card .info .title{font-size:13px;font-weight:600;color:#1A4FCC;}
+.alive-card .info .sub{font-size:12px;color:var(--text-mid);margin-top:2px;}
+.alive-card .act{font-size:12px;font-weight:600;color:#1A4FCC;background:white;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+
+/* ========== EXEC PAGE ========== */
+.exec-progress-bar{height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin-top:12px;overflow:hidden;}
+.exec-progress-fill{height:100%;background:white;border-radius:2px;transition:width 0.8s ease;width:40%;}
+.exec-list{padding:20px 20px 0;}
+.exec-item{background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow-card);}
+.exec-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.exec-icon.done{background:var(--green-bg);}
+.exec-icon.going{background:var(--orange-bg);}
+.exec-icon.wait{background:var(--blue-bg);}
+.exec-text{flex:1;min-width:0;}
+.exec-title{font-size:14px;font-weight:600;color:var(--text-dark);}
+.exec-desc{font-size:12px;color:var(--text-mid);margin-top:3px;line-height:1.4;}
+.exec-why{font-size:11px;color:var(--blue);margin-top:3px;background:var(--blue-bg);display:inline-block;padding:2px 8px;border-radius:6px;}
+.exec-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;flex-shrink:0;align-self:center;}
+.exec-tag.done{background:var(--green-bg);color:var(--green);}
+.exec-tag.going{background:var(--orange-bg);color:var(--orange);}
+.exec-tag.wait{background:var(--blue-bg);color:var(--blue);}
+.exec-tag.failed{background:var(--red-bg);color:var(--red);}
+
+/* Fallback - 降级方案 UI */
+.exec-item.fallback{background:linear-gradient(135deg,#FFF9F0,#FFF5F9);border:1.5px solid var(--orange);}
+.exec-item.fallback .exec-icon{background:var(--orange-bg);}
+.exec-fallback-title{font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;}
+.fallback-options{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.fallback-opt{background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s;font-size:13px;}
+.fallback-opt:hover{border-color:var(--pink);background:var(--pink-pale);}
+.fallback-opt .fo-icon{font-size:18px;}
+.fallback-opt .fo-text{flex:1;font-weight:500;color:var(--text-dark);}
+.fallback-opt .fo-note{font-size:11px;color:var(--text-mid);font-weight:400;}
+
+/* Thinking dots */
+@keyframes dotPulse{0%,100%{opacity:0.3}50%{opacity:1}}
+.thinking-dots span{animation:dotPulse 1.4s infinite;display:inline-block;}
+.thinking-dots span:nth-child(2){animation-delay:0.2s;}
+.thinking-dots span:nth-child(3){animation-delay:0.4s;}
+
+/* 连接确认仪式感 */
+.connect-confirm-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,245,245,0.98);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px;}
+.connect-confirm-overlay.show{display:flex;animation:fadeIn 0.3s ease;}
+.connect-confirm-icon{font-size:72px;animation:bounce 0.6s ease;margin-bottom:20px;}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.connect-confirm-text{font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:8px;}
+.connect-confirm-sub{font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:20px;max-width:280px;}
+
+/* 模拟降级入口 */
+.simulate-trigger{font-size:10px;color:rgba(255,255,255,0.7);cursor:pointer;user-select:none;margin-left:2px;border-bottom:1px dashed rgba(255,255,255,0.5);padding-bottom:1px;}
+.simulate-trigger:hover{color:rgba(255,255,255,1);border-bottom-color:rgba(255,255,255,0.9);}
+.contact-ask-box{margin:0 20px;padding:18px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-card);border:1.5px solid var(--pink-light);}
+.contact-ask-box h3{font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:6px;}
+.contact-ask-box p{font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.5;}
+.ask-btns{display:flex;gap:10px;}
+.btn-primary{flex:1;padding:13px;border-radius:var(--radius-xs);border:none;cursor:pointer;font-size:14px;font-weight:600;color:white;background:linear-gradient(135deg,#FF7B89,#FF5068);box-shadow:0 4px 14px rgba(255,80,104,0.3);}
+.btn-secondary{flex:1;padding:13px;border-radius:var(--radius-xs);border:none;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-mid);background:var(--pink-pale);}
+.cancel-link{display:block;text-align:center;margin:16px 0;font-size:14px;color:var(--text-light);cursor:pointer;}
+
+/* ========== CONNECT PAGE ========== */
+.invite-card{margin:16px 20px 0;background:linear-gradient(135deg,#FFF5F7,#F5EEFF);border-radius:var(--radius);padding:20px;border:1.5px solid var(--pink-light);box-shadow:var(--shadow-card);}
+.invite-card h3{font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:4px;}
+.invite-card .desc{font-size:12px;color:var(--text-mid);margin-bottom:16px;line-height:1.5;}
+.invite-card .desc b{color:var(--text-dark);}
+.qr-placeholder{width:110px;height:110px;margin:0 auto 14px;background:white;border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);box-shadow:var(--shadow-card);}
+.qr-pattern{font-size:44px;opacity:0.6;}
+.qr-label{font-size:11px;color:var(--text-light);}
+.invite-code{text-align:center;font-size:28px;font-weight:700;color:var(--pink);letter-spacing:8px;margin-bottom:12px;}
+.invite-btns{display:flex;gap:10px;}
+.invite-expire{text-align:center;font-size:12px;color:var(--text-light);margin-top:10px;}
+
+.why-offline{margin:14px 20px 0;padding:14px 16px;background:var(--card);border-radius:var(--radius-sm);border-left:4px solid #9B6EBE;box-shadow:var(--shadow-card);}
+.why-offline h4{font-size:13px;font-weight:600;color:#6A3FA0;margin-bottom:8px;}
+.why-offline ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.why-offline li{font-size:12px;color:var(--text-mid);line-height:1.4;padding-left:16px;position:relative;}
+.why-offline li::before{content:"✓";color:var(--green);font-weight:700;position:absolute;left:0;}
+
+.contact-list{padding:0 20px;}
+.contact-row{background:var(--card);border-radius:var(--radius-sm);padding:13px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-card);}
+.contact-row-info{flex:1;min-width:0;}
+.contact-row-name{font-size:14px;font-weight:600;color:var(--text-dark);}
+.contact-row-meta{font-size:12px;color:var(--text-light);margin-top:2px;display:flex;gap:8px;align-items:center;}
+.cstate-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.cstate-badge.period{background:var(--pink-pale);color:var(--pink);}
+.cstate-badge.normal{background:var(--green-bg);color:var(--green);}
+.mini-btn{padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:500;}
+.mini-btn.sos{background:var(--pink);color:white;}
+.mini-btn.remove{background:var(--pink-pale);color:var(--text-mid);}
+
+.pending-row{background:var(--card);border-radius:var(--radius-sm);padding:13px 16px;margin-bottom:10px;box-shadow:var(--shadow-card);border:1.5px dashed var(--border);}
+.pending-label{font-size:12px;color:var(--orange);font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.pending-desc{font-size:13px;color:var(--text-dark);font-weight:500;}
+.pending-action{font-size:12px;color:var(--text-mid);margin-top:4px;}
+.limit-note{padding:0 20px 8px;font-size:12px;color:var(--text-light);line-height:1.6;text-align:center;}
+
+/* ========== PROFILE PAGE ========== */
+.form-section{padding:14px 20px 0;}
+.form-label{font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:6px;display:block;}
+.form-input{width:100%;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text-dark);outline:none;font-family:inherit;margin-bottom:14px;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--pink);}
+
+.cert-item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--radius-xs);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow-card);}
+.cert-mark{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.cert-mark.ok{background:var(--green-bg);}
+.cert-info{flex:1;}
+.cert-name{font-size:13px;font-weight:600;color:var(--text-dark);}
+.cert-stat{font-size:11px;margin-top:2px;}
+.cert-stat.ok{color:var(--green);}
+
+.emg-item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--radius-xs);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow-card);}
+.emg-mark{width:34px;height:34px;border-radius:10px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.emg-info{flex:1;}
+.emg-name{font-size:13px;font-weight:600;color:var(--text-dark);}
+.emg-phone{font-size:12px;color:var(--text-light);margin-top:2px;}
+.emg-level{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;background:var(--orange-bg);color:var(--orange);}
+
+.pain-opts{display:flex;gap:8px;margin-bottom:14px;}
+.pain-opt{flex:1;padding:10px;text-align:center;border-radius:var(--radius-xs);border:1.5px solid var(--border);cursor:pointer;background:var(--card);font-size:13px;color:var(--text-mid);font-weight:500;transition:all 0.2s;}
+.pain-opt.selected{border-color:var(--pink);background:var(--pink-pale);color:var(--pink);}
+
+.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.tag-item{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;color:var(--text-mid);cursor:pointer;background:var(--card);transition:all 0.2s;}
+.tag-item.selected{border-color:var(--pink);background:var(--pink-pale);color:var(--pink);}
+
+/* ========== OVERLAYS ========== */
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(45,32,48,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+.overlay.show{display:flex;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--bg);width:100%;border-radius:28px 28px 0 0;padding:24px;max-height:85%;overflow-y:auto;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
+.sheet-title{font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:6px;}
+.sheet-sub{font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.5;}
+
+.help-opt{background:var(--card);border-radius:var(--radius-sm);padding:13px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;border:1.5px solid transparent;transition:all 0.2s;box-shadow:var(--shadow-card);}
+.help-opt.selected{border-color:var(--pink);background:var(--pink-pale);}
+.help-opt-icon{font-size:26px;}
+.help-opt-text{flex:1;}
+.help-opt-title{font-size:14px;font-weight:600;color:var(--text-dark);}
+.help-opt-desc{font-size:12px;color:var(--text-mid);margin-top:2px;}
+.help-opt-check{font-size:20px;opacity:0;transition:opacity 0.15s;}
+.help-opt.selected .help-opt-check{opacity:1;}
+
+.alive-sheet{text-align:center;padding:8px 0 20px;}
+.alive-emoji{font-size:60px;margin-bottom:12px;}
+.alive-title{font-size:20px;font-weight:700;color:var(--text-dark);margin-bottom:6px;}
+.alive-sub{font-size:14px;color:var(--text-mid);margin-bottom:22px;line-height:1.5;}
+.alive-btn{width:100%;padding:15px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:16px;font-weight:700;color:white;background:linear-gradient(135deg,#FF7B89,#FF5068);box-shadow:0 6px 18px rgba(255,80,104,0.3);margin-bottom:8px;}
+.alive-skip{font-size:13px;color:var(--text-light);cursor:pointer;}
+
+/* Toast */
+.toast{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;display:flex;align-items:center;justify-content:center;}
+.toast-msg{background:rgba(45,32,48,0.85);color:white;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:500;opacity:0;transition:opacity 0.3s;}
+.toast-msg.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="phone-frame">
+<div class="screen">
+
+<!-- ═══════════ PAGE 1: HOME ═══════════ -->
+<div class="page active" id="page-home">
+  <div class="status-bar"><span>9:41</span><span style="display:flex;gap:4px">●●● 🔋</span></div>
+  <div class="grad-header pink">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:13px;opacity:0.8;margin-bottom:2px">你好，小悦</div><h1>暖守守护中</h1></div>
+      <div style="background:rgba(255,255,255,0.22);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;position:relative" onclick="showAliveCheck()">🔔<div class="notif-dot" style="top:3px;right:3px"></div></div>
+    </div>
+    <div class="period-row">
+      <span class="period-badge">🩸 经期第 3 天</span>
+      <span class="risk-dot high"></span> 中度风险
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- SOS -->
+    <div class="sos-section">
+      <div class="sos-ring-wrap" id="sosWrap"
+        onmousedown="sosStart()" ontouchstart="sosStart()"
+        onmouseup="sosEnd()" ontouchend="sosEnd()" onmouseleave="sosEnd()">
+        <div class="sos-ring-bg"></div>
+        <svg class="sos-progress" id="sosRing" viewBox="0 0 170 170"><circle cx="85" cy="85" r="80" id="sosCircle"/></svg>
+        <div class="sos-btn" id="sosBtn">
+          <div class="sos-btn-icon">🆘</div>
+          <div class="sos-btn-text">我很不舒服</div>
+          <div class="sos-btn-sub">点击选择帮助</div>
+        </div>
+      </div>
+      <div class="sos-hint">长按 3 秒 → 直接启动全级守护</div>
+    </div>
+
+    <!-- Emoji -->
+    <div class="section-title">今天感觉怎么样？</div>
+    <div class="emoji-bar">
+      <div class="emoji-btn" onclick="pickEmoji(this)">😣<span>剧痛</span></div>
+      <div class="emoji-btn selected" onclick="pickEmoji(this)">😟<span>隐痛</span></div>
+      <div class="emoji-btn" onclick="pickEmoji(this)">😐<span>还好</span></div>
+      <div class="emoji-btn" onclick="pickEmoji(this)">😊<span>轻松</span></div>
+      <div class="emoji-btn" onclick="pickEmoji(this)">🤢<span>恶心</span></div>
+      <div class="emoji-btn" onclick="pickEmoji(this)">😴<span>嗜睡</span></div>
+      <div class="emoji-btn" onclick="pickEmoji(this)">😰<span>腰痛</span></div>
+    </div>
+    <div class="emoji-label">已记录 · 比写日记舒服</div>
+
+    <!-- Contacts -->
+    <div class="section-row" style="margin-bottom:8px">
+      <span class="section-title" style="padding:0">安全联系人</span>
+      <span style="font-size:12px;color:var(--text-light)">2/5</span>
+    </div>
+    <div class="contacts-strip">
+      <div class="contact-chip active-period" onclick="switchTo('connect')">
+        <div class="contact-avatar">🌸<div class="status-dot yellow"></div></div>
+        <div class="contact-info"><div class="contact-name">张小慧</div><div class="contact-state">🩸 经期第1天</div></div>
+      </div>
+      <div class="contact-chip" onclick="switchTo('connect')">
+        <div class="contact-avatar">🌿<div class="status-dot green"></div></div>
+        <div class="contact-info"><div class="contact-name">陈晓林</div><div class="contact-state">正常 · 同小区</div></div>
+      </div>
+      <div class="add-contact-chip" onclick="switchTo('connect')">＋ 添加</div>
+    </div>
+
+    <!-- Health Dashboard -->
+    <div style="padding-top:14px">
+      <div class="section-title">🏠 健康物资 · AI 托管</div>
+      <div class="health-dash-card">
+        <div class="health-item">
+          <div class="health-icon">💊</div>
+          <div class="health-info"><div class="health-name">布洛芬</div><div class="health-meta">5月10日购入 · 按你习惯可能只剩几颗了</div></div>
+          <span class="health-status warn">快没了</span>
+        </div>
+        <div class="health-item">
+          <div class="health-icon">🔥</div>
+          <div class="health-info"><div class="health-name">暖宝宝</div><div class="health-meta">上次经期用了8片 · 现在不多了</div></div>
+          <span class="health-status warn">不多了</span>
+        </div>
+        <div class="health-item">
+          <div class="health-icon">☕</div>
+          <div class="health-info"><div class="health-name">红糖姜茶</div><div class="health-meta">3个月前买的 · 距下次经期还有21天</div></div>
+          <span class="health-status bad">用完了</span>
+        </div>
+        <div style="background:var(--pink-pale);border-radius:12px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--text-mid);line-height:1.5">
+          💡 不用记精确数量——下次用完选「快没了」，AI 会自动推算补货时间
+        </div>
+        <button class="health-action-btn" onclick="showMsg('🛒 正在为你搜索附近药店...')">一键补货</button>
+      </div>
+    </div>
+
+    <!-- Alive -->
+    <div class="alive-card">
+      <div class="icon">🫂</div>
+      <div class="info"><div class="title">今日签到 · 我还在</div><div class="sub">告诉系统你平安，经期 4h 无操作将自动询问</div></div>
+      <div class="act" onclick="showAliveCheck()">签到</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>档案</div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 2: EXEC ═══════════ -->
+<div class="page" id="page-exec">
+  <div class="status-bar" style="color:rgba(255,255,255,0.7)"><span>9:41</span><span style="display:flex;gap:4px">●●● 🔋</span></div>
+  <div class="grad-header exec-grad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h1>守护已启动</h1><p>AI 并行处理中 <span class="simulate-trigger" ondblclick="cycleFallbackDemo()">· Demo</span></p></div>
+      <div style="background:rgba(255,255,255,0.22);border-radius:12px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer" onclick="switchTo('home')">← 返回</div>
+    </div>
+    <div class="exec-progress-bar"><div class="exec-progress-fill" id="execFill"></div></div>
+  </div>
+
+  <div class="page-content">
+    <div class="exec-list">
+      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">已通知紧急联系人</div><div class="exec-desc">妈妈 · 已将你的位置和当前状态同步给她</div><div class="exec-why">📋 因为：3 级通知规则触发，直接通知联系人</div></div><span class="exec-tag done">完成</span></div>
+      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">布洛芬已下单</div><div class="exec-desc">对比了附近 3 家药店，选了最快送达的海王星辰 · 预计 28 分钟</div><div class="exec-why">📋 因为：你档案里常备药是布洛芬，自动匹配</div></div><span class="exec-tag done">完成</span></div>
+      <div class="exec-item"><div class="exec-icon going">🔍</div><div class="exec-text"><div class="exec-title">搜索附近医院</div><div class="exec-desc">XX 医院妇科急诊 1.2km · 候诊约 15 分钟 · 24 小时</div><div class="exec-why">📋 因为：筛选了有妇科急诊且 3km 内的医院</div></div><span class="exec-tag going">进行中</span></div>
+      <div class="exec-item"><div class="exec-icon wait">🚖</div><div class="exec-text"><div class="exec-title">网约车待命</div><div class="exec-desc">目的地已预设为 XX 医院 · 确认后一键叫车</div><div class="exec-why">📋 因为：你还没说要不要去医院，先准备好</div></div><span class="exec-tag wait">等待</span></div>
+      <div class="exec-item"><div class="exec-icon wait">📅</div><div class="exec-text"><div class="exec-title">挂号信息已预填</div><div class="exec-desc">科室：妇科急诊 · 姓名、身份证号已从档案自动填好</div><div class="exec-why">📋 因为：省去你在疼的时候一个字一个字敲</div></div><span class="exec-tag wait">等待</span></div>
+    </div>
+
+    <div class="contact-ask-box">
+      <h3>🤝 需要联系人上门吗？</h3>
+      <p>AI 能帮你买药、叫车、挂号。如果你很虚弱或担心独自一人，可以呼叫安全联系人。</p>
+      <div class="ask-btns">
+        <button class="btn-primary" onclick="callContactNow()">需要有人来看看我</button>
+        <button class="btn-secondary" onclick="showMsg('AI 将继续处理，有事随时回来')">不用了，AI 够了</button>
+      </div>
+    </div>
+    <div class="cancel-link" onclick="switchTo('home')">不用了，我没事了</div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 3: CONNECT ═══════════ -->
+<div class="page" id="page-connect">
+  <div class="status-bar"><span>9:41</span><span style="display:flex;gap:4px">●●● 🔋</span></div>
+  <div class="grad-header purple">
+    <h1>安全联系人</h1>
+    <p>线下确认 · 弱连接 · 平时零互动</p>
+  </div>
+
+  <div class="page-content">
+    <div class="invite-card">
+      <h3>📨 邀请新联系人</h3>
+      <div class="desc">发送邀请码，对方接受后需 <b>线下见面扫码确认</b>，才能建立连接。</div>
+      <div class="qr-placeholder"><div class="qr-pattern">▦</div><div class="qr-label">邀请二维码</div></div>
+      <div class="invite-code">WN·8427</div>
+      <div class="invite-btns">
+        <button class="btn-primary" style="box-shadow:none" onclick="showMsg('📤 已发送到微信')">发送微信</button>
+        <button class="btn-secondary" onclick="showMsg('📋 链接已复制')">复制链接</button>
+      </div>
+      <div class="invite-expire">⏰ 24 小时后过期 · <span style="color:var(--pink);cursor:pointer" onclick="showMsg('🔄 已重新生成')">刷新</span></div>
+    </div>
+
+    <div class="why-offline">
+      <h4>🔐 为什么必须线下见面？</h4>
+      <ul>
+        <li>眼见为实，确认对方是真实女性</li>
+        <li>线下见面筛选诚意，降低安全风险</li>
+        <li>建立最低信任基础，比纯线上强 100 倍</li>
+        <li>见面后默认零互动，零社交压力</li>
+      </ul>
+    </div>
+
+    <div style="padding-top:14px">
+      <div class="section-title">已连接 · 2/5</div>
+      <div class="contact-list">
+        <div class="contact-row">
+          <div class="contact-avatar" style="width:42px;height:42px;font-size:20px">🌸</div>
+          <div class="contact-row-info">
+            <div class="contact-row-name">张小慧</div>
+            <div class="contact-row-meta"><span>同小区 3 栋</span><span>·</span><span>上次确认 3 天前</span></div>
+          </div>
+          <span class="cstate-badge period">经期 D1</span>
+          <button class="mini-btn sos" onclick="showMsg('📢 已向张小慧发送紧急呼叫')">呼叫</button>
+        </div>
+        <div class="contact-row">
+          <div class="contact-avatar" style="width:42px;height:42px;font-size:20px">🌿</div>
+          <div class="contact-row-info">
+            <div class="contact-row-name">陈晓林</div>
+            <div class="contact-row-meta"><span>隔壁小区</span><span>·</span><span>上次确认 7 天前</span></div>
+          </div>
+          <span class="cstate-badge normal">正常</span>
+          <button class="mini-btn sos" onclick="showMsg('📢 已向陈晓林发送紧急呼叫')">呼叫</button>
+        </div>
+      </div>
+
+      <div class="section-title">待线下确认 · 1</div>
+      <div class="contact-list">
+        <div class="pending-row">
+          <div class="pending-label">⏳ 等待线下扫码</div>
+          <div class="pending-desc">王小红 · 附近居民</div>
+          <div class="pending-action">已接受邀请 · 请约定见面时间完成确认</div>
+        </div>
+      </div>
+    </div>
+    <div class="limit-note">最多 5 位 · 限制数量保证连接质量<br>每位联系人都是你的责任，也是你的守护</div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item active"><span class="nav-icon">🔗</span>连接</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>档案</div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 4: PROFILE ═══════════ -->
+<div class="page" id="page-profile">
+  <div class="status-bar"><span>9:41</span><span style="display:flex;gap:4px">●●● 🔋</span></div>
+  <div class="grad-header pink" style="background:linear-gradient(160deg,#FF9BAA,#FFBCC6)">
+    <h1>我的档案</h1>
+    <p>应急时的每一条信息都可能救命</p>
+  </div>
+
+  <div class="page-content">
+    <!-- Certs -->
+    <div class="form-section">
+      <label class="form-label">🔐 身份认证</label>
+      <div class="cert-item"><div class="cert-mark ok">✅</div><div class="cert-info"><div class="cert-name">手机号认证</div><div class="cert-stat ok">已认证</div></div><span style="font-size:12px;color:var(--green);font-weight:500">✓</span></div>
+      <div class="cert-item"><div class="cert-mark ok">✅</div><div class="cert-info"><div class="cert-name">实名认证</div><div class="cert-stat ok">已认证</div></div><span style="font-size:12px;color:var(--green);font-weight:500">✓</span></div>
+      <div class="cert-item"><div class="cert-mark ok">✅</div><div class="cert-info"><div class="cert-name">人脸核验 · 女性身份</div><div class="cert-stat ok">已通过</div></div><span style="font-size:12px;color:var(--green);font-weight:500">✓</span></div>
+    </div>
+
+    <!-- Address -->
+    <div class="form-section">
+      <label class="form-label">📍 地址档案</label>
+      <input class="form-input" value="南山区科技园 · X 栋 X 室" onfocus="this.select()">
+      <label class="form-label" style="font-size:11px;color:var(--text-light)">紧急呼叫时自动发送给联系人和 120</label>
+    </div>
+
+    <!-- Emergency contacts -->
+    <div class="form-section">
+      <label class="form-label">📞 紧急联系人</label>
+      <div class="emg-item"><div class="emg-mark">👩</div><div class="emg-info"><div class="emg-name">妈妈</div><div class="emg-phone">138****8888</div></div><span class="emg-level">3 级通知</span></div>
+      <div class="emg-item"><div class="emg-mark">👭</div><div class="emg-info"><div class="emg-name">闺蜜小陈</div><div class="emg-phone">139****7777</div></div><span class="emg-level">2 级通知</span></div>
+      <div style="padding:4px 0 12px;font-size:12px;color:var(--text-light);cursor:pointer;text-align:center" onclick="showMsg('功能待开发')">＋ 添加紧急联系人</div>
+    </div>
+
+    <!-- Health Events -->
+    <div class="form-section">
+      <label class="form-label">🩺 健康事件（可扩展）</label>
+      <div style="background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-card);border:1.5px solid var(--pink-light)">
+        <div style="font-size:13px;font-weight:600;color:var(--pink);margin-bottom:10px">✦ 经期守护 · 已激活</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input class="form-input" value="28" style="width:60px;text-align:center;margin:0;padding:8px" onfocus="this.select()"><span style="font-size:12px;color:var(--text-mid);align-self:center">天周期</span>
+          <input class="form-input" value="5" style="width:60px;text-align:center;margin:0;padding:8px" onfocus="this.select()"><span style="font-size:12px;color:var(--text-mid);align-self:center">天经期</span>
+        </div>
+        <label class="form-label">痛经程度</label>
+        <div class="pain-opts">
+          <div class="pain-opt" onclick="selPain(this)">轻度</div>
+          <div class="pain-opt" onclick="selPain(this)">中度</div>
+          <div class="pain-opt selected" onclick="selPain(this)">重度</div>
+        </div>
+        <label class="form-label">痛经特征</label>
+        <div class="tag-row">
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">腹部绞痛</span>
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">腰背痛</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">恶心呕吐</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">极度疲劳</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">头痛</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">情绪起伏</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:14px;line-height:1.5">
+        📐 扩展预留：过敏发作 · 偏头痛 · 惊恐发作 · 其他突发健康事件<br>
+        当前 MVP 版本仅激活经期场景。未来版本可一键开启更多健康事件类型。
+      </div>
+    </div>
+
+    <!-- Notify settings -->
+    <div class="form-section">
+      <label class="form-label">⚙️ 通知设置</label>
+      <div style="background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-card)">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span style="font-size:13px;color:var(--text-dark)">通知联系人时机</span><span style="font-size:12px;color:var(--pink);font-weight:500">3 级才通知</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span style="font-size:13px;color:var(--text-dark)">每日签到提醒</span><span style="font-size:12px;color:var(--green);font-weight:500">已开启</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span style="font-size:13px;color:var(--text-dark)">经期前备药提醒</span><span style="font-size:12px;color:var(--green);font-weight:500">已开启</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
+    <div class="nav-item active"><span class="nav-icon">👤</span>档案</div>
+  </div>
+</div>
+
+<!-- ═══════════ OVERLAY: HELP OPTIONS ═══════════ -->
+<div class="overlay" id="dlgHelp" onclick="hideOverlay('dlgHelp')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">你需要什么帮助？</div>
+    <div class="sheet-sub">AI 会并行处理所有选中项。不做的事不收费。</div>
+    <div class="help-opt selected" onclick="this.classList.toggle('selected')"><span class="help-opt-icon">💊</span><div class="help-opt-text"><div class="help-opt-title">搜索附近药店买药</div><div class="help-opt-desc">美团买药 30 分钟送达</div></div><span class="help-opt-check">✓</span></div>
+    <div class="help-opt selected" onclick="this.classList.toggle('selected')"><span class="help-opt-icon">📞</span><div class="help-opt-text"><div class="help-opt-title">通知紧急联系人</div><div class="help-opt-desc">自动发送定位和当前状态</div></div><span class="help-opt-check">✓</span></div>
+    <div class="help-opt" onclick="this.classList.toggle('selected')"><span class="help-opt-icon">🚖</span><div class="help-opt-text"><div class="help-opt-title">叫网约车去附近医院</div><div class="help-opt-desc">一键跳转滴滴，预填目的地</div></div><span class="help-opt-check">✓</span></div>
+    <div class="help-opt" onclick="this.classList.toggle('selected')"><span class="help-opt-icon">🏥</span><div class="help-opt-text"><div class="help-opt-title">搜索附近妇科急诊</div><div class="help-opt-desc">显示距离、等候时间、挂号</div></div><span class="help-opt-check">✓</span></div>
+    <div class="help-opt" onclick="this.classList.toggle('selected')"><span class="help-opt-icon">🔴</span><div class="help-opt-text"><div class="help-opt-title">暖宝宝 / 红糖姜茶</div><div class="help-opt-desc">一键外卖代下单</div></div><span class="help-opt-check">✓</span></div>
+    <button class="btn-primary" style="margin-top:8px" onclick="executeHelp()">好的，交给你了</button>
+  </div>
+</div>
+
+<!-- ═══════════ OVERLAY: CONNECT CONFIRMATION ═══════════ -->
+<div class="connect-confirm-overlay" id="dlgConnectConfirm">
+  <div class="connect-confirm-icon">🤝</div>
+  <div class="connect-confirm-text">你们已成为彼此的安全联系人</div>
+  <div class="connect-confirm-sub">她将在你最需要的时候，知道如何找到你。<br>平时互不打扰。</div>
+  <div style="background:var(--card);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;text-align:left;font-size:13px;color:var(--text-mid);line-height:1.6;max-width:260px">
+    💡 提醒：门牌号和门禁密码<strong>默认不共享</strong>，只有当你按下「需要有人来看看我」时才会解锁给对方。
+  </div>
+  <button class="alive-btn" style="width:auto;padding:12px 32px;font-size:15px" onclick="hideOverlay('dlgConnectConfirm')">知道了</button>
+</div>
+
+<!-- ═══════════ OVERLAY: ALIVE CHECK ═══════════ -->
+<div class="overlay" id="dlgAlive" onclick="hideOverlay('dlgAlive')">
+  <div class="sheet alive-sheet" onclick="event.stopPropagation()">
+    <div class="alive-emoji">❤️</div>
+    <div class="alive-title">我还在，别担心</div>
+    <div class="alive-sub">今日经期第 3 天，已安全签到。<br>下次自动询问：4 小时后</div>
+    <button class="alive-btn" onclick="hideOverlay('dlgAlive');showMsg('✅ 已签到！系统知道你今天平安')">确认签到</button>
+    <div class="alive-skip" onclick="hideOverlay('dlgAlive')">今天不想签</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast"><div class="toast-msg" id="toastMsg"></div></div>
+
+</div><!-- screen -->
+</div><!-- phone-frame -->
+
+<script>
+// ═══ PAGE SWITCHING ═══
+function switchTo(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.remove('active');
+    const pages={'home':0,'connect':1,'profile':2};
+    const idx=pages[name];
+    document.querySelectorAll('.bottom-nav .nav-item')[idx]?.classList.add('active');
+  });
+}
+
+// ═══ TOAST ═══
+var toastTmr;
+function showMsg(m){
+  var t=document.getElementById('toastMsg');
+  if(toastTmr)clearTimeout(toastTmr);
+  t.textContent=m;t.classList.add('show');
+  toastTmr=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ═══ OVERLAY ═══
+function hideOverlay(id){document.getElementById(id).classList.remove('show');}
+function showHelp(){document.getElementById('dlgHelp').classList.add('show');}
+function showAliveCheck(){document.getElementById('dlgAlive').classList.add('show');}
+
+// ═══ SOS ═══
+var sosTmr,sosPct;
+function sosStart(){
+  var r=document.getElementById('sosRing'),c=document.getElementById('sosCircle');
+  r.classList.add('counting');sosPct=0;c.style.strokeDashoffset=502;
+  sosTmr=setInterval(function(){
+    sosPct+=50;
+    c.style.strokeDashoffset=502-(sosPct/3000)*502;
+    if(sosPct>=3000){sosFire();}
+  },50);
+  document.getElementById('sosBtn').style.transform='scale(0.96)';
+}
+function sosEnd(){
+  if(sosTmr){clearInterval(sosTmr);sosTmr=null;}
+  document.getElementById('sosRing').classList.remove('counting');
+  document.getElementById('sosCircle').style.strokeDashoffset=502;
+  document.getElementById('sosBtn').style.transform='scale(1)';
+  if(sosPct>0&&sosPct<3000){
+    showHelp(); // tap → help options
+  }
+  sosPct=0;
+}
+function sosFire(){
+  sosEnd();
+  switchTo('exec');
+  showMsg('🛡️ 全级守护已启动！');
+  var f=document.getElementById('execFill');
+  var w=40;
+  var intv=setInterval(function(){
+    w+=15;if(w>100)w=100;f.style.width=w+'%';if(w>=100)clearInterval(intv);
+  },1200);
+}
+function executeHelp(){
+  hideOverlay('dlgHelp');
+  switchTo('exec');
+  showMsg('AI 正在并行处理...');
+  var f=document.getElementById('execFill');
+  var w=40;
+  var intv=setInterval(function(){
+    w+=15;if(w>100)w=100;f.style.width=w+'%';if(w>=100)clearInterval(intv);
+  },1200);
+}
+function callContactNow(){
+  showMsg('📢 已通知张小慧和陈晓林 · 等待响应');
+}
+function noContact(){showMsg('AI 将继续处理，有事随时回来');}
+
+// ═══ EMOJI ═══
+function pickEmoji(el){
+  el.parentElement.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  showMsg('已记录：'+el.querySelector('span').textContent);
+}
+
+// ═══ PAIN ═══
+function selPain(el){
+  el.parentElement.querySelectorAll('.pain-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══════════════════════════════════════
+//  v3.1 降级状态机 & Demo 演示逻辑
+// ═══════════════════════════════════════
+
+// 管道步骤定义
+var pipelineSteps = [
+  { id:'notify',   name:'通知紧急联系人', icon:'📞', tag:'完成', cls:'done', canFail:false },
+  { id:'pharmacy', name:'布洛芬已下单',   icon:'💊', tag:'完成', cls:'done', canFail:true,
+    fallbackTitle:'AI 买药失败了——附近药店没有布洛芬库存',
+    fallbackOpts:[
+      {icon:'👭', text:'请张小慧帮你带一盒', note:'她在同小区 3 栋 · 现在在经期'},
+      {icon:'🏪', text:'显示附近 3 家药店',    note:'海王星辰 800m · 大参林 1.1km · 国大药房 1.3km'},
+      {icon:'🔄', text:'换一种止痛药重试',    note:'对乙酰氨基酚 · 双氯芬酸钠 · 萘普生'}
+    ]},
+  { id:'hospital', name:'搜索附近医院',   icon:'🏥', tag:'进行中', cls:'going', canFail:true,
+    fallbackTitle:'附近 5km 内无妇科急诊——搜索降级',
+    fallbackOpts:[
+      {icon:'📋', text:'显示最近 3 家综合医院急诊', note:'XX医院 1.2km · YY医院 2.5km · ZZ医院 3.8km'},
+      {icon:'📞', text:'直接拨打 120',              note:'预填好你的地址和症状描述'},
+      {icon:'🚖', text:'我还能忍，先叫车回家',      note:'取消医院搜索，改为叫车回家'}
+    ]},
+  { id:'ride',     name:'网约车待命',     icon:'🚖', tag:'等待',   cls:'wait',  canFail:true,
+    fallbackTitle:'滴滴/高德均无可派车辆——附近无车',
+    fallbackOpts:[
+      {icon:'👭', text:'请安全联系人开车来接', note:'张小慧有车 · 陈晓林打车过来约 12 分钟'},
+      {icon:'🏃', text:'我自己走过去',         note:'取消叫车 · 目的地 XX 医院步行约 15 分钟'},
+      {icon:'⏰', text:'等待重试',             note:'每 3 分钟自动重试一次叫车'}
+    ]},
+  { id:'register', name:'挂号信息已预填', icon:'📅', tag:'等待',   cls:'wait',  canFail:false }
+];
+
+// 降级演示状态索引：0=正常, 1=买药失败, 2=医院失败, 3=叫车失败, 4=全部恢复
+var fallbackDemoState = 0;
+
+function cycleFallbackDemo(){
+  fallbackDemoState = (fallbackDemoState + 1) % 5;
+  applyFallbackDemoState();
+}
+
+function applyFallbackDemoState(){
+  var list = document.querySelector('#page-exec .exec-list');
+  if(!list) return;
+
+  // 先清理所有旧状态
+  list.querySelectorAll('.exec-item').forEach(function(item){
+    item.classList.remove('fallback');
+    var fbDiv = item.querySelector('.fallback-section');
+    if(fbDiv) fbDiv.remove();
+  });
+
+  // 重置标签
+  var items = list.querySelectorAll('.exec-item');
+  var tags  = list.querySelectorAll('.exec-tag');
+  var icons = list.querySelectorAll('.exec-icon');
+
+  function resetItem(idx, name, tag, cls){
+    if(items[idx]){
+      var t = items[idx].querySelector('.exec-tag');
+      var i = items[idx].querySelector('.exec-icon');
+      var tt= items[idx].querySelector('.exec-title');
+      if(tt) tt.textContent = name;
+      if(t){ t.textContent = tag; t.className = 'exec-tag '+cls; }
+      if(i){ i.className = 'exec-icon '+cls; i.textContent = pipelineSteps[idx].icon; }
+    }
+  }
+
+  resetItem(0, pipelineSteps[0].name, pipelineSteps[0].tag, pipelineSteps[0].cls);
+  resetItem(1, pipelineSteps[1].name, pipelineSteps[1].tag, pipelineSteps[1].cls);
+  resetItem(2, pipelineSteps[2].name, pipelineSteps[2].tag, pipelineSteps[2].cls);
+  resetItem(3, pipelineSteps[3].name, pipelineSteps[3].tag, pipelineSteps[3].cls);
+  resetItem(4, pipelineSteps[4].name, pipelineSteps[4].tag, pipelineSteps[4].cls);
+
+  // 根据状态应用降级
+  if(fallbackDemoState === 0){
+    // 正常状态：全部恢复
+    showMsg('🔄 Demo: 正常执行中');
+    resetItem(1, '布洛芬已下单', '完成', 'done');
+    resetItem(2, '搜索附近医院', '进行中', 'going');
+    resetItem(3, '网约车待命', '等待', 'wait');
+    if(icons[1]){ icons[1].className='exec-icon done'; icons[1].textContent='✅'; }
+  }
+
+  if(fallbackDemoState >= 1){
+    // 买药失败
+    applyFallback(1);
+  }
+  if(fallbackDemoState >= 2){
+    // 医院搜索失败
+    applyFallback(2);
+  }
+  if(fallbackDemoState >= 3){
+    // 叫车失败
+    applyFallback(3);
+  }
+  if(fallbackDemoState === 4){
+    // 全部恢复
+    showMsg('🔄 Demo: 全部恢复，重新执行');
+    resetItem(1, '布洛芬已下单', '完成', 'done');
+    resetItem(2, '搜索附近医院', '进行中', 'going');
+    resetItem(3, '网约车待命', '等待', 'wait');
+    if(icons[1]){ icons[1].className='exec-icon done'; icons[1].textContent='✅'; }
+    if(icons[2]){ icons[2].className='exec-icon going'; icons[2].textContent='🔍'; }
+    if(icons[3]){ icons[3].className='exec-icon wait';  icons[3].textContent='🚖'; }
+  }
+}
+
+function applyFallback(stepIdx){
+  var items = document.querySelectorAll('#page-exec .exec-item');
+  var step = pipelineSteps[stepIdx];
+  if(!step || !items[stepIdx]) return;
+
+  var item = items[stepIdx];
+  item.classList.add('fallback');
+
+  // 更新图标和标签
+  var icon = item.querySelector('.exec-icon');
+  var tag  = item.querySelector('.exec-tag');
+  var title= item.querySelector('.exec-title');
+  if(icon){ icon.className = 'exec-icon going'; icon.textContent = '⚠️'; }
+  if(tag){  tag.textContent = '降级'; tag.className = 'exec-tag failed'; }
+  if(title){ title.textContent = step.name + ' · 降级处理'; }
+
+  // 插入降级选项 HTML
+  var fbSection = document.createElement('div');
+  fbSection.className = 'fallback-section';
+  fbSection.innerHTML = '<div class="exec-fallback-title">'+step.fallbackTitle+'</div>'+
+    '<div class="fallback-options">'+
+    step.fallbackOpts.map(function(opt){
+      return '<div class="fallback-opt" onclick="pickFallback(\''+step.id+'\',\''+opt.text+'\')">'+
+        '<span class="fo-icon">'+opt.icon+'</span>'+
+        '<span class="fo-text">'+opt.text+'<br><span class="fo-note">'+opt.note+'</span></span>'+
+      '</div>';
+    }).join('')+
+    '</div>';
+  item.appendChild(fbSection);
+
+  var msgs = {
+    1: '⚠️ Demo: 买药 API 调用失败——附近药店无库存',
+    2: '⚠️ Demo: 医院搜索失败——5km 内无妇科急诊',
+    3: '⚠️ Demo: 叫车失败——附近无可派车辆'
+  };
+  showMsg(msgs[stepIdx] || '⚠️ 服务降级');
+}
+
+function pickFallback(stepId, choice){
+  showMsg('✅ 已选择: '+choice+' · AI 继续执行');
+  // 模拟：选择降级方案后，该项标记为完成
+  var items = document.querySelectorAll('#page-exec .exec-item');
+  var stepIdx = -1;
+  for(var i=0;i<pipelineSteps.length;i++){
+    if(pipelineSteps[i].id === stepId){ stepIdx = i; break; }
+  }
+  if(stepIdx >= 0 && items[stepIdx]){
+    var item = items[stepIdx];
+    item.classList.remove('fallback');
+    var fbDiv = item.querySelector('.fallback-section');
+    if(fbDiv) fbDiv.remove();
+    var icon = item.querySelector('.exec-icon');
+    var tag  = item.querySelector('.exec-tag');
+    var title= item.querySelector('.exec-title');
+    if(icon){ icon.className = 'exec-icon done'; icon.textContent = '✅'; }
+    if(tag){  tag.textContent = '已降级'; tag.className = 'exec-tag done'; }
+    if(title){ title.textContent = pipelineSteps[stepIdx].name + ' · 已手动处理'; }
+  }
+}
+
+// ═══ 连接确认仪式感 ═══
+function showConnectConfirm(){
+  document.getElementById('dlgConnectConfirm').classList.add('show');
+  // 3 秒后自动消失
+  setTimeout(function(){
+    document.getElementById('dlgConnectConfirm').classList.remove('show');
+  }, 4000);
+}
+
+// 把 showHelp 的确认按钮也接到 exec 页面的降级状态
+var origExecuteHelp = executeHelp;
+executeHelp = function(){
+  origExecuteHelp();
+  // 重置 demo 状态
+  fallbackDemoState = 0;
+};
+
+// 在连接页扫码时触发确认仪式
+// 绑定到 invite 卡片区域
+document.addEventListener('DOMContentLoaded', function(){
+  var inviteCard = document.querySelector('.invite-card');
+  if(inviteCard){
+    inviteCard.style.cursor = 'pointer';
+    inviteCard.addEventListener('click', function(e){
+      // 点了发送/复制按钮不触发
+      if(e.target.tagName === 'BUTTON') return;
+      showConnectConfirm();
+    });
+  }
+});
+</script>
+</body>
+</html>
