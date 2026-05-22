@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "pages/webview/webview"
+  ],
+  "window": {
+    "navigationBarTitleText": "暖守",
+    "navigationBarBackgroundColor": "#FF7B89",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFF5F0"
+  }
+}

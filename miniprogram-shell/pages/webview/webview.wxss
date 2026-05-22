@@ -1,0 +1,6 @@
+Page {
+  background-color: #FFF5F0;
+}
+.wrap{
+  height: 100vh;
+}
