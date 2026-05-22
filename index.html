@@ -402,11 +402,11 @@ body{
 
   <div class="page-content">
     <div class="exec-list">
-      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">已通知紧急联系人</div><div class="exec-desc">妈妈 · 已将你的位置和当前状态同步给她</div><div class="exec-why">📋 因为：3 级通知规则触发，直接通知联系人</div></div><span class="exec-tag done">完成</span></div>
-      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">布洛芬已下单</div><div class="exec-desc">对比了附近 3 家药店，选了最快送达的海王星辰 · 预计 28 分钟</div><div class="exec-why">📋 因为：你档案里常备药是布洛芬，自动匹配</div></div><span class="exec-tag done">完成</span></div>
-      <div class="exec-item"><div class="exec-icon going">🔍</div><div class="exec-text"><div class="exec-title">搜索附近医院</div><div class="exec-desc">XX 医院妇科急诊 1.2km · 候诊约 15 分钟 · 24 小时</div><div class="exec-why">📋 因为：筛选了有妇科急诊且 3km 内的医院</div></div><span class="exec-tag going">进行中</span></div>
-      <div class="exec-item"><div class="exec-icon wait">🚖</div><div class="exec-text"><div class="exec-title">网约车待命</div><div class="exec-desc">目的地已预设为 XX 医院 · 确认后一键叫车</div><div class="exec-why">📋 因为：你还没说要不要去医院，先准备好</div></div><span class="exec-tag wait">等待</span></div>
-      <div class="exec-item"><div class="exec-icon wait">📅</div><div class="exec-text"><div class="exec-title">挂号信息已预填</div><div class="exec-desc">科室：妇科急诊 · 姓名、身份证号已从档案自动填好</div><div class="exec-why">📋 因为：省去你在疼的时候一个字一个字敲</div></div><span class="exec-tag wait">等待</span></div>
+      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">已通知紧急联系人</div><div class="exec-desc">妈妈 · 已将你的位置和当前状态同步给她</div><div class="exec-why">🧠 决策：你当前触发了 3 级守护（持续无响应风险），优先通知最稳定联系人</div></div><span class="exec-tag done">完成</span></div>
+      <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">布洛芬已下单</div><div class="exec-desc">对比了附近 3 家药店，选了最快送达的海王星辰 · 预计 28 分钟</div><div class="exec-why">🧠 决策：按你档案常用药优先；再按“500m 内 + 最快送达”排序下单</div></div><span class="exec-tag done">完成</span></div>
+      <div class="exec-item"><div class="exec-icon going">🔍</div><div class="exec-text"><div class="exec-title">搜索附近医院</div><div class="exec-desc">XX 医院妇科急诊 1.2km · 候诊约 15 分钟 · 24 小时</div><div class="exec-why">🧠 决策：只保留“24h + 妇科/急诊 + 3km 内”的选项，先给你最稳的 1 家</div></div><span class="exec-tag going">进行中</span></div>
+      <div class="exec-item"><div class="exec-icon wait">🚖</div><div class="exec-text"><div class="exec-title">网约车待命</div><div class="exec-desc">目的地已预设为 XX 医院 · 确认后一键叫车</div><div class="exec-why">🧠 决策：你还没确认是否去医院，我先把车和路线准备好，减少你下一步操作</div></div><span class="exec-tag wait">等待</span></div>
+      <div class="exec-item"><div class="exec-icon wait">📅</div><div class="exec-text"><div class="exec-title">挂号信息已预填</div><div class="exec-desc">科室：妇科急诊 · 姓名、身份证号已从档案自动填好</div><div class="exec-why">🧠 决策：你在疼的时候最怕输入，我把所有必填项提前补齐，只等你点确认</div></div><span class="exec-tag wait">等待</span></div>
     </div>
 
     <div class="contact-ask-box">
@@ -860,9 +860,9 @@ function applyFallback(stepIdx){
   item.appendChild(fbSection);
 
   var msgs = {
-    1: '⚠️ Demo: 买药 API 调用失败——附近药店无库存',
-    2: '⚠️ Demo: 医院搜索失败——5km 内无妇科急诊',
-    3: '⚠️ Demo: 叫车失败——附近无可派车辆'
+    1: '⚠️ Demo: 买药 API 调用失败——附近药店无库存（已自动给你准备 3 个替代方案）',
+    2: '⚠️ Demo: 医院搜索失败——5km 内无妇科急诊（已切换为综合医院急诊/120/回家路线）',
+    3: '⚠️ Demo: 叫车失败——附近无可派车辆（已切换为联系人接送/步行/等待重试）'
   };
   showMsg(msgs[stepIdx] || '⚠️ 服务降级');
 }
