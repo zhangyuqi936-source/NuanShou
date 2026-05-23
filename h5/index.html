@@ -265,7 +265,13 @@ body{
 .tag-item{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;color:var(--text-mid);cursor:pointer;background:var(--card);transition:all 0.2s;}
 .tag-item.selected{border-color:var(--pink);background:var(--pink-pale);color:var(--pink);}
 
-/* ========== OVERLAYS ========== */
+/* IoT rows */
+.iot-row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;border:1.5px solid var(--border);}
+.iot-ic{width:34px;height:34px;border-radius:10px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.iot-info{flex:1;min-width:0;}
+.iot-name{font-size:13px;font-weight:700;color:var(--text-dark);}
+.iot-meta{font-size:12px;color:var(--text-light);margin-top:2px;}
+
 .overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(45,32,48,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
 .overlay.show{display:flex;animation:fadeIn 0.2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -406,9 +412,11 @@ body{
     </div>
   </div>
   <div class="bottom-nav">
-    <div class="nav-item active"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item active" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('exec')"><span class="nav-icon">🛡️</span>守护</div>
     <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
-    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>档案</div>
+    <div class="nav-item" onclick="switchTo('iot')"><span class="nav-icon">🏠</span>家居</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>我的</div>
   </div>
 </div>
 
@@ -452,6 +460,14 @@ body{
       </div>
     </div>
     <div class="cancel-link" onclick="switchTo('home')">不用了，我没事了</div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item active"><span class="nav-icon">🛡️</span>守护</div>
+    <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
+    <div class="nav-item" onclick="switchTo('iot')"><span class="nav-icon">🏠</span>家居</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>我的</div>
   </div>
 </div>
 
@@ -522,8 +538,70 @@ body{
   </div>
   <div class="bottom-nav">
     <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('exec')"><span class="nav-icon">🛡️</span>守护</div>
     <div class="nav-item active"><span class="nav-icon">🔗</span>连接</div>
-    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>档案</div>
+    <div class="nav-item" onclick="switchTo('iot')"><span class="nav-icon">🏠</span>家居</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>我的</div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE 4: IOT ═══════════ -->
+<div class="page" id="page-iot">
+  <div class="status-bar"><span>9:41</span><span style="display:flex;gap:4px">●●● 🔋</span></div>
+  <div class="grad-header pink" style="background:linear-gradient(160deg,#2D2030,#5A3B5F)">
+    <h1>家居守护</h1>
+    <p>权限分级 · 操作留痕 · 可撤回</p>
+  </div>
+
+  <div class="page-content">
+    <div class="card">
+      <div class="card-inner">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-dark)">两种模式</div>
+            <div style="margin-top:4px;font-size:12px;color:var(--text-mid);line-height:1.5">回家前预设环境，或在低能量时刻远程接住一个小动作。</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn-primary" style="padding:12px" onclick="iotPresetHome()">回家预设</button>
+          <button class="btn-secondary" style="padding:12px" onclick="iotAssistLowEnergy()">低能量协助</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-light)">每次操作都会记录在事件时间线中；你可一键撤回。</div>
+      </div>
+    </div>
+
+    <div class="section-title">设备状态（演示）</div>
+    <div class="card">
+      <div class="card-inner" style="padding-bottom:10px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="iot-row"><div class="iot-ic">💡</div><div class="iot-info"><div class="iot-name">客厅小夜灯</div><div class="iot-meta" id="devLightMeta">当前：关闭</div></div><button class="mini-btn sos" onclick="iotToggle('light')" id="btnLight">开灯</button></div>
+          <div class="iot-row"><div class="iot-ic">❄️</div><div class="iot-info"><div class="iot-name">空调</div><div class="iot-meta" id="devAcMeta">当前：关闭</div></div><button class="mini-btn sos" onclick="iotToggle('ac')" id="btnAc">开启</button></div>
+          <div class="iot-row"><div class="iot-ic">🔥</div><div class="iot-info"><div class="iot-name">热水壶</div><div class="iot-meta" id="devKettleMeta">当前：待机</div></div><button class="mini-btn sos" onclick="iotBoil()">烧水</button></div>
+          <div class="iot-row"><div class="iot-ic">🔒</div><div class="iot-info"><div class="iot-name">门锁状态</div><div class="iot-meta">当前：已上锁（仅展示，不操作）</div></div><span class="cstate-badge normal">只读</span></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn-secondary" style="flex:1" onclick="iotUndo()">撤回上一条操作</button>
+          <button class="btn-secondary" style="flex:1" onclick="showMsg('🔐 已查看权限分级说明');logEvent('ui','查看权限分级说明（演示）')">权限分级</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="card-inner" style="font-size:12px;color:var(--text-mid);line-height:1.6">
+        ✅ 只有在你授权后，守护者才能远程操作。<br>
+        ✅ 操作留痕，可随时撤回。<br>
+        ✅ 默认不做监控，只做“轻轻帮你完成一个小动作”。
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('exec')"><span class="nav-icon">🛡️</span>守护</div>
+    <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
+    <div class="nav-item active"><span class="nav-icon">🏠</span>家居</div>
+    <div class="nav-item" onclick="switchTo('profile')"><span class="nav-icon">👤</span>我的</div>
   </div>
 </div>
 
@@ -602,8 +680,10 @@ body{
   </div>
   <div class="bottom-nav">
     <div class="nav-item" onclick="switchTo('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" onclick="switchTo('exec')"><span class="nav-icon">🛡️</span>守护</div>
     <div class="nav-item" onclick="switchTo('connect')"><span class="nav-icon">🔗</span>连接</div>
-    <div class="nav-item active"><span class="nav-icon">👤</span>档案</div>
+    <div class="nav-item" onclick="switchTo('iot')"><span class="nav-icon">🏠</span>家居</div>
+    <div class="nav-item active"><span class="nav-icon">👤</span>我的</div>
   </div>
 </div>
 
@@ -655,12 +735,14 @@ body{
 function switchTo(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>{
-    n.classList.remove('active');
-    const pages={'home':0,'connect':1,'profile':2};
-    const idx=pages[name];
+
+  // bottom nav sync (5 tabs)
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(n=>n.classList.remove('active'));
+  var idxMap = { home:0, exec:1, connect:2, iot:3, profile:4 };
+  var idx = idxMap[name];
+  if(typeof idx === 'number'){
     document.querySelectorAll('.bottom-nav .nav-item')[idx]?.classList.add('active');
-  });
+  }
 }
 
 // ═══ TOAST ═══
@@ -743,6 +825,93 @@ function showAliveCheck(){
   el.classList.add('show');
   el.style.display='flex';
 }
+
+// ═══ IOT (virtual devices demo) ═══
+var devices = {
+  light: { on:false },
+  ac:    { on:false, temp:26 },
+  kettle:{ boiling:false }
+};
+var deviceCmdHistory = [];
+
+function renderDevices(){
+  var lm=document.getElementById('devLightMeta');
+  var am=document.getElementById('devAcMeta');
+  var km=document.getElementById('devKettleMeta');
+  var bl=document.getElementById('btnLight');
+  var ba=document.getElementById('btnAc');
+
+  if(lm) lm.textContent = '当前：' + (devices.light.on ? '开启' : '关闭');
+  if(bl) bl.textContent = devices.light.on ? '关灯' : '开灯';
+
+  if(am) am.textContent = '当前：' + (devices.ac.on ? ('开启 · '+devices.ac.temp+'℃') : '关闭');
+  if(ba) ba.textContent = devices.ac.on ? '关闭' : '开启';
+
+  if(km) km.textContent = '当前：' + (devices.kettle.boiling ? '加热中（预计3分钟）' : '待机');
+}
+
+function iotToggle(kind){
+  if(!devices[kind]) return;
+  var prev = JSON.parse(JSON.stringify(devices));
+  if(kind==='light'){
+    devices.light.on = !devices.light.on;
+    deviceCmdHistory.push({prev:prev, msg: devices.light.on ? '开启小夜灯' : '关闭小夜灯'});
+    logEvent('dev','家居操作：'+deviceCmdHistory[deviceCmdHistory.length-1].msg+'（已留痕）');
+  }
+  if(kind==='ac'){
+    devices.ac.on = !devices.ac.on;
+    if(devices.ac.on) devices.ac.temp = 26;
+    deviceCmdHistory.push({prev:prev, msg: devices.ac.on ? ('开启空调 · 26℃') : '关闭空调'});
+    logEvent('dev','家居操作：'+deviceCmdHistory[deviceCmdHistory.length-1].msg+'（已留痕）');
+  }
+  renderDevices();
+  showMsg('✅ 已执行：'+deviceCmdHistory[deviceCmdHistory.length-1].msg);
+}
+
+function iotBoil(){
+  var prev = JSON.parse(JSON.stringify(devices));
+  devices.kettle.boiling = true;
+  deviceCmdHistory.push({prev:prev, msg:'启动烧水'});
+  logEvent('dev','家居操作：启动烧水（已留痕）');
+  renderDevices();
+  showMsg('✅ 已执行：启动烧水');
+  setTimeout(function(){
+    devices.kettle.boiling = false;
+    renderDevices();
+    logEvent('dev','热水已烧好：已自动提醒取用');
+  }, 1800);
+}
+
+function iotUndo(){
+  if(!deviceCmdHistory.length){
+    showMsg('没有可撤回的操作');
+    return;
+  }
+  var last = deviceCmdHistory.pop();
+  devices = JSON.parse(JSON.stringify(last.prev));
+  renderDevices();
+  logEvent('dev','撤回操作：已恢复到上一步状态');
+  showMsg('↩️ 已撤回');
+}
+
+function iotPresetHome(){
+  logEvent('dev','模式：回家预设 → 开灯 + 空调26℃ + 烧水（演示）');
+  // 顺序做，制造“系统在调度”的观感
+  setTimeout(()=>iotToggle('light'), 200);
+  setTimeout(()=>iotToggle('ac'), 500);
+  setTimeout(()=>iotBoil(), 850);
+}
+
+function iotAssistLowEnergy(){
+  logEvent('dev','模式：低能量协助 → 开灯 + 烧水 + 提醒吃药（演示）');
+  setTimeout(()=>iotToggle('light'), 180);
+  setTimeout(()=>iotBoil(), 520);
+  setTimeout(()=>{logEvent('dev','提醒：已在床头屏显“现在喝水 + 服药”'); showMsg('🔔 已发送提醒');}, 900);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  try{ renderDevices(); }catch(_e){}
+});
 
 // ═══ EVENT LOG (timeline) ═══
 var eventLog = [];
