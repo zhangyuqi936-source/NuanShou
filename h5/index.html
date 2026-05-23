@@ -132,7 +132,20 @@ body{
 .alive-card .info .sub{font-size:12px;color:var(--text-mid);margin-top:2px;}
 .alive-card .act{font-size:12px;font-weight:600;color:#1A4FCC;background:white;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;}
 
-/* ========== EXEC PAGE ========== */
+/* Event log */
+.event-log{display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;padding-right:4px;}
+.event-log::-webkit-scrollbar{width:4px;}
+.event-log::-webkit-scrollbar-thumb{background:rgba(45,32,48,0.15);border-radius:4px;}
+.event-item{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--text-mid);line-height:1.35;}
+.event-item .t{min-width:44px;color:var(--text-light);font-variant-numeric:tabular-nums;}
+.event-item .dot{color:var(--pink);margin-top:1px;}
+.event-item .msg{flex:1;color:var(--text-mid);}
+.event-item.ai .dot{color:var(--purple);}
+.event-item.warn .dot{color:var(--orange);}
+.event-item.user .dot{color:var(--pink);}
+.event-item.dev .dot{color:var(--blue);}
+.event-empty{padding:10px 0;font-size:12px;color:var(--text-light);} 
+
 .exec-progress-bar{height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin-top:12px;overflow:hidden;}
 .exec-progress-fill{height:100%;background:white;border-radius:2px;transition:width 0.8s ease;width:40%;}
 .exec-list{padding:20px 20px 0;}
@@ -401,6 +414,17 @@ body{
   </div>
 
   <div class="page-content">
+    <!-- Event Log (timeline) -->
+    <div class="card" id="eventLogCard">
+      <div class="card-inner" style="padding-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-dark)">🧾 事件时间线</div>
+          <div style="font-size:11px;color:var(--text-light)">实时更新 · 可解释</div>
+        </div>
+        <div id="eventLog" class="event-log"></div>
+      </div>
+    </div>
+
     <div class="exec-list">
       <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">已通知紧急联系人</div><div class="exec-desc">妈妈 · 已将你的位置和当前状态同步给她</div><div class="exec-why">🧠 决策：你当前触发了 3 级守护（持续无响应风险），优先通知最稳定联系人</div></div><span class="exec-tag done">完成</span></div>
       <div class="exec-item"><div class="exec-icon done">✅</div><div class="exec-text"><div class="exec-title">布洛芬已下单</div><div class="exec-desc">对比了附近 3 家药店，选了最快送达的海王星辰 · 预计 28 分钟</div><div class="exec-why">🧠 决策：按你档案常用药优先；再按“500m 内 + 最快送达”排序下单</div></div><span class="exec-tag done">完成</span></div>
@@ -659,9 +683,48 @@ function showAliveCheck(){
   el.style.display='flex';
 }
 
+// ═══ EVENT LOG (timeline) ═══
+var eventLog = [];
+function fmtTime(d){
+  try{
+    var hh = String(d.getHours()).padStart(2,'0');
+    var mm = String(d.getMinutes()).padStart(2,'0');
+    return hh+':'+mm;
+  }catch(_e){ return '—'; }
+}
+function logEvent(kind, msg){
+  var item = { ts: new Date(), kind: kind || 'ai', msg: msg || '' };
+  eventLog.push(item);
+  if(eventLog.length > 18) eventLog.shift();
+  renderEventLog();
+}
+function renderEventLog(){
+  var el = document.getElementById('eventLog');
+  if(!el) return;
+  if(!eventLog.length){
+    el.innerHTML = '<div class="event-empty">还没有事件。启动守护后会在这里滚动显示。</div>';
+    return;
+  }
+  el.innerHTML = eventLog.map(function(e){
+    var cls = 'event-item ' + (e.kind||'ai');
+    return '<div class="'+cls+'">'
+      + '<span class="t">'+fmtTime(e.ts)+'</span>'
+      + '<span class="dot">●</span>'
+      + '<span class="msg">'+(e.msg||'')+'</span>'
+      + '</div>';
+  }).join('');
+  try{ el.scrollTop = el.scrollHeight; }catch(_e){}
+}
+
+// 初始化空态
+document.addEventListener('DOMContentLoaded', function(){
+  renderEventLog();
+});
+
 // ═══ SOS ═══
 var sosTmr,sosPct;
 function sosStart(e){
+  logEvent('user','按住SOS，开始倒计时（3秒防误触）');
   try{ if(e && e.preventDefault) e.preventDefault(); }catch(_e){}
   var r=document.getElementById('sosRing'),c=document.getElementById('sosCircle');
   r.classList.add('counting');sosPct=0;c.style.strokeDashoffset=502;
@@ -681,11 +744,13 @@ function sosEnd(e){
   document.getElementById('sosCircle').style.strokeDashoffset=502;
   document.getElementById('sosBtn').style.transform='scale(1)';
   if(sosPct>0&&sosPct<3000){
+    logEvent('ui','短按SOS：打开帮助选项（你只需点一次）');
     showHelp(); // tap → help options
   }
   sosPct=0;
 }
 function sosFire(){
+  logEvent('ai','触发全级守护（3级）：并行启动任务编排与兜底策略');
   sosEnd();
   switchTo('exec');
   showMsg('🛡️ 全级守护已启动！');
@@ -694,9 +759,14 @@ function sosFire(){
   var intv=setInterval(function(){
     w+=15;if(w>100)w=100;f.style.width=w+'%';if(w>=100)clearInterval(intv);
   },1200);
+  // Demo: 模拟子步骤事件，让它看起来像真的系统在跑
+  setTimeout(()=>logEvent('ai','定位成功：已确认当前位置与安全区'), 450);
+  setTimeout(()=>logEvent('ai','已筛选药店：对比距离/库存/送达时间'), 1100);
+  setTimeout(()=>logEvent('ai','已生成联系人消息：症状+定位+上门/代办建议'), 1700);
 }
 function executeHelp(){
   hideOverlay('dlgHelp');
+  logEvent('ai','收到你的选择：启动并行任务清单（买药/通知/叫车/找医院）');
   switchTo('exec');
   showMsg('AI 正在并行处理...');
   var f=document.getElementById('execFill');
@@ -704,17 +774,22 @@ function executeHelp(){
   var intv=setInterval(function(){
     w+=15;if(w>100)w=100;f.style.width=w+'%';if(w>=100)clearInterval(intv);
   },1200);
+  setTimeout(()=>logEvent('ai','已完成优先级排序：先做“最省你操作”的事情'), 700);
+  setTimeout(()=>logEvent('ai','准备降级方案：任一步失败都不会卡住'), 1500);
 }
 function callContactNow(){
+  logEvent('ai','已通知安全联系人：张小慧（同小区）+ 陈晓林（隔壁小区）');
   showMsg('📢 已通知张小慧和陈晓林 · 等待响应');
 }
-function noContact(){showMsg('AI 将继续处理，有事随时回来');}
+function noContact(){logEvent('ai','继续由AI处理：你随时可返回呼叫联系人');showMsg('AI 将继续处理，有事随时回来');}
 
 // ═══ EMOJI ═══
 function pickEmoji(el){
   el.parentElement.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
-  showMsg('已记录：'+el.querySelector('span').textContent);
+  var t = el.querySelector('span').textContent;
+  logEvent('user','情绪/身体记录：'+t);
+  showMsg('已记录：'+t);
 }
 
 // ═══ PAIN ═══
@@ -759,6 +834,7 @@ var fallbackDemoState = 0;
 
 function cycleFallbackDemo(){
   fallbackDemoState = (fallbackDemoState + 1) % 5;
+  logEvent('warn','手动触发降级演示：切换到状态 '+fallbackDemoState);
   applyFallbackDemoState();
 }
 
@@ -868,6 +944,8 @@ function applyFallback(stepIdx){
 }
 
 function pickFallback(stepId, choice){
+  logEvent('user','选择降级方案：'+choice);
+  logEvent('ai','执行继续：已应用替代方案并更新任务状态');
   showMsg('✅ 已选择: '+choice+' · AI 继续执行');
   // 模拟：选择降级方案后，该项标记为完成
   var items = document.querySelectorAll('#page-exec .exec-item');
